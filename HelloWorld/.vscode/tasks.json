@@ -1,0 +1,42 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "delete old binary",
+            "command": "echo \"Deleting ${fileDirname}/Binary/${fileBasenameNoExtension}\" &  rm ${fileDirname}/${fileBasenameNoExtension} || :"
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: gcc build active file",
+            "command": "/usr/bin/gcc",
+            "args": [
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}/Binary/${fileBasenameNoExtension}",
+                "${fileDirname}/Generated/HelloWorldPubSubTypes.cxx",
+                "${fileDirname}/Generated/HelloWorldTypeObjectSupport.cxx",
+                "-I${fileDirname}",
+                "-I/usr/include/fastdds",
+                "-I/usr/include/fastcdr",
+                "-std=c++11",
+                "-lstdc++",
+                "-lfastcdr",
+                "-lfastdds"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "compiler: /usr/bin/gcc",
+            "dependsOn": ["delete old binary"]
+        }
+    ]
+}
