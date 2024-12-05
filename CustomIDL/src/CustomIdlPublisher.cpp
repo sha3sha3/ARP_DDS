@@ -1,23 +1,9 @@
-// Copyright 2016 Proyectos y Sistemas de Mantenimiento SL (eProsima).
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 /**
  * @file HelloWorldPublisher.cpp
  *
  */
 
-#include "Generated/HelloWorldPubSubTypes.hpp"
+#include "Generated/MyMessagePubSubTypes.hpp"
 
 #include <chrono>
 #include <thread>
@@ -31,11 +17,11 @@
 
 using namespace eprosima::fastdds::dds;
 
-class HelloWorldPublisher
+class CustomIdlPublisher
 {
 private:
 
-    HelloWorld hello_;
+    MyMessage my_message_;
 
     DomainParticipant* participant_;
 
@@ -87,16 +73,16 @@ private:
 
 public:
 
-    HelloWorldPublisher()
+    CustomIdlPublisher()
         : participant_(nullptr)
         , publisher_(nullptr)
         , topic_(nullptr)
         , writer_(nullptr)
-        , type_(new HelloWorldPubSubType())
+        , type_(new MyMessagePubSubType())
     {
     }
 
-    virtual ~HelloWorldPublisher()
+    virtual ~CustomIdlPublisher()
     {
         if (writer_ != nullptr)
         {
@@ -116,8 +102,7 @@ public:
     //!Initialize the publisher
     bool init()
     {
-        hello_.index(0);
-        hello_.message("HelloWorld");
+        my_message_.index(0);
 
         DomainParticipantQos participantQos;
         participantQos.name("Participant_publisher");
@@ -132,7 +117,7 @@ public:
         type_.register_type(participant_);
 
         // Create the publications Topic
-        topic_ = participant_->create_topic("HelloWorldTopic", type_.get_type_name(), TOPIC_QOS_DEFAULT);
+        topic_ = participant_->create_topic("CalculatorTopic", type_.get_type_name(), TOPIC_QOS_DEFAULT);
 
         if (topic_ == nullptr)
         {
@@ -162,8 +147,10 @@ public:
     {
         if (listener_.matched_ > 0)
         {
-            hello_.index(hello_.index() + 1);
-            writer_->write(&hello_);
+            my_message_.index(my_message_.index() + 1);
+            my_message_.first_number(fRand(0,20));
+            my_message_.second_number(fRand(0,20));
+            writer_->write(&my_message_);
             return true;
         }
         return false;
@@ -179,11 +166,19 @@ public:
             if (publish())
             {
                 samples_sent++;
-                std::cout << "Message: " << hello_.message() << " with index: " << hello_.index()
-                            << " SENT" << std::endl;
+                std::cout <<"#1: " << my_message_.first_number() 
+                          <<" #2: "<< my_message_.second_number() 
+                          <<" Index: " << my_message_.index()
+                          <<" SENT" << std::endl;
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
+    }
+
+    double fRand(double fMin, double fMax)
+    {
+        double f = (double)rand() / RAND_MAX;
+        return fMin + f * (fMax - fMin);
     }
 };
 
@@ -192,7 +187,7 @@ int main()
     std::cout << "Starting publisher." << std::endl;
     uint32_t samples = 10;
 
-    HelloWorldPublisher* mypub = new HelloWorldPublisher();
+    CustomIdlPublisher* mypub = new CustomIdlPublisher();
     if(mypub->init())
     {
         mypub->run(samples);

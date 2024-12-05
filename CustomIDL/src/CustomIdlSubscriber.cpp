@@ -1,23 +1,10 @@
-// Copyright 2016 Proyectos y Sistemas de Mantenimiento SL (eProsima).
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 
 /**
  * @file HelloWorldSubscriber.cpp
  *
  */
 
-#include "Generated/HelloWorldPubSubTypes.hpp"
+#include "Generated/MyMessagePubSubTypes.hpp"
 
 #include <chrono>
 #include <thread>
@@ -33,7 +20,7 @@
 
 using namespace eprosima::fastdds::dds;
 
-class HelloWorldSubscriber
+class CustomIdlSubscriber
 {
 private:
 
@@ -83,18 +70,20 @@ private:
                 DataReader* reader) override
         {
             SampleInfo info;
-            if (reader->take_next_sample(&hello_, &info) == eprosima::fastdds::dds::RETCODE_OK)
+            if (reader->take_next_sample(&my_message_, &info) == eprosima::fastdds::dds::RETCODE_OK)
             {
                 if (info.valid_data)
                 {
                     samples_++;
-                    std::cout << "Message: " << hello_.message() << " with index: " << hello_.index()
-                              << " RECEIVED." << std::endl;
+                    std::cout <<"#1: " << my_message_.first_number() 
+                              <<" #2: "<< my_message_.second_number() 
+                              <<" Index: " << my_message_.index()
+                              <<" Sum: " << my_message_.first_number() + my_message_.second_number() <<std::endl;
                 }
             }
         }
 
-        HelloWorld hello_;
+        MyMessage my_message_;
 
         std::atomic_int samples_;
 
@@ -103,16 +92,16 @@ private:
 
 public:
 
-    HelloWorldSubscriber()
+    CustomIdlSubscriber()
         : participant_(nullptr)
         , subscriber_(nullptr)
         , topic_(nullptr)
         , reader_(nullptr)
-        , type_(new HelloWorldPubSubType())
+        , type_(new MyMessagePubSubType())
     {
     }
 
-    virtual ~HelloWorldSubscriber()
+    virtual ~CustomIdlSubscriber()
     {
         if (reader_ != nullptr)
         {
@@ -145,7 +134,7 @@ public:
         type_.register_type(participant_);
 
         // Create the subscriptions Topic
-        topic_ = participant_->create_topic("HelloWorldTopic", type_.get_type_name(), TOPIC_QOS_DEFAULT);
+        topic_ = participant_->create_topic("CalculatorTopic", type_.get_type_name(), TOPIC_QOS_DEFAULT);
 
         if (topic_ == nullptr)
         {
@@ -188,7 +177,7 @@ int main()
     std::cout << "Starting subscriber." << std::endl;
     uint32_t samples = 10;
 
-    HelloWorldSubscriber* mysub = new HelloWorldSubscriber();
+    CustomIdlSubscriber* mysub = new CustomIdlSubscriber();
     if (mysub->init())
     {
         mysub->run(samples);
